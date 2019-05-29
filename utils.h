@@ -108,7 +108,6 @@ struct Input get_input_from_file() {                    // читання вхі
 
     fclose(fptr);
     return input;
-
 }
 
 
@@ -116,3 +115,4 @@ int is_int(float a) {                                   // перевірка ч
     int b = (int) a;
     return (b - a == 0) ? 1 : 0;
 }
+

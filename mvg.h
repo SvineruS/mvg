@@ -50,9 +50,10 @@ float *mvg_(float *roots, float **mc, struct Input *input) {    // метод в
 float *mvg(float *roots, struct Input *input) {                 // метод віток та границь
     float **mc = malloc_2d_array(2, input->x_c);                // генерація початкових додаткових обмежень
     for (int i = 0; i < input->x_c; i++) {                      // типу xi > 0
-        mc[i][0] = 0;  
+        mc[i][0] = 0;
         mc[i][1] = -1;
     }
 
     return mvg_(roots, mc, input);                              // рекурсивний метод віток і границь
 }
+

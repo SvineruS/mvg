@@ -1,5 +1,4 @@
 #pragma once
-
 #include "utils.h"
 
 
@@ -21,13 +20,9 @@ struct SimplexOutput {                                  // структура р
 
 
 struct Simplex get_matrix(struct Input *input) {        // генерація таблиці для симплексу
-    int w = input->x_c + input->h + 1;                  // кількість стовпців = кількість коефіцієнтів +
-                                                        //      + кількість обмежень (з додатковими) + 1
-
     int h = input->h + 1;                               // кілкість рядків = кількість обмежень + 1
-
+    int w = input->x_c + input->h + 1;                  // стовпці = коефіцієнти + обмеження + 1
     float **matrix = malloc_2d_array(w, h);             // виділення пам'яті
-
     struct Simplex simplex;                             // створення структури для симплексу
     simplex.x_c = input->x_c;
     simplex.c_c = input->h;
@@ -35,9 +30,7 @@ struct Simplex get_matrix(struct Input *input) {        // генерація т
     simplex.h = h;
     simplex.matrix = matrix;
     simplex.error = 0;
-
                                                         // створення таблиці
-
     for (int i = 0; i < input->h; i++) {                // копіювання коефіцієнтів обмежень
         for (int j = 0; j < input->x_c; j++)
             matrix[i][j] = input->constrains[i][j];

@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #include "simplex.h"
 #include "mvg.h"
 
