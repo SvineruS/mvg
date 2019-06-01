@@ -5,10 +5,9 @@
 
 
 void get_mc(int i, float r, float **mc1, float **mc2) {         // отримання допоміжного обмеження
-    mc1[i][0] = ((int) r);                                        // перше обмеження: x < [xk]
+    mc1[i][0] = (int) r;                                        // перше обмеження: x < [xk]
     mc1[i][1] = 1;
-
-    mc2[i][0] = ((int) r + 1);                                    // друге обмеження: x > [xk] + 1
+    mc2[i][0] = (int) r + 1;                                    // друге обмеження: x > [xk] + 1
     mc2[i][1] = -1;
 }
 
@@ -35,22 +34,23 @@ float *mvg_(float *roots, float **mc, struct Input *input) {    // метод в
         float **mc2 = copy_2d_array(mc, 2, input->x_c);
         get_mc(i, r, mc1, mc2);                                 // генеруємо 2 нових
 
-        float* r1 = simplex_wrap(input, mc1);    // шукаємо оптимальне рішення з новими обмеженнями
+        float* r1 = simplex_wrap(input, mc1);                   // шукаємо оптимальне рішення з новими обмеженнями
         float* r2 = simplex_wrap(input, mc2);
 
-        if (r1 == NULL && r2 == NULL) return NULL;
-        else if (r1 == NULL) return mvg_(r2, mc2, input);
-        else if (r2 == NULL) return mvg_(r1, mc1, input);
-        else {
+        if (r1 == NULL && r2 == NULL) return NULL;              // якщо у обох підзадач немає рішень - повертаємо NULL
+        else if (r1 == NULL) return mvg_(r2, mc2, input);       // якщо рішення немає у однієї з підзадач -
+        else if (r2 == NULL) return mvg_(r1, mc1, input);       //    розглядаємо іншу
+        else {                                                  // якщо у обох підзадач є рішення
             float f1 = r1[input->x_c] * input->type;
             float f2 = r2[input->x_c] * input->type;
 
-            if (f1 > f2)                                        // для обмеженя з більшим значенням цільової функції
-                return mvg_(r1, mc1, input);                 // рекурсивно викликаємо метод віток і границь
-            else
+            if (f1 > f2)                                        // обираємо підзадачу з більшим (меншим) значенням
+                return mvg_(r1, mc1, input);                    // цільової функції та рекурсивно викликаємо
+            else                                                // метод віток і границь для нових коренів
                 return mvg_(r2, mc2, input);
         }
     }
+
     return roots;                                               // якщо всі коефіцієнті цілочисленні повертаємо їх
 }
 
@@ -61,7 +61,6 @@ float *mvg(float *roots, struct Input *input) {                 // метод в
         mc[i][0] = 0;
         mc[i][1] = -1;
     }
-
     return mvg_(roots, mc, input);                              // рекурсивний метод віток і границь
 }
 

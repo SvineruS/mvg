@@ -4,7 +4,7 @@
 
 
 
-void print_input(struct Input *input) {
+void print_input(struct Input *input) {                         // друкування вхідних данних
     printf("Вхідні данні: \n");
     printf("func: ");
     for (int i=0; i<input->x_c-1; i++)
@@ -23,30 +23,27 @@ void print_input(struct Input *input) {
 }
 
 
-void print_output(float *roots, int c) {
-    for (int i = 0; i < c; i++)                    // друкування відповіді
+void print_output(float *roots, int c) {                        // друкування відповіді
+    for (int i = 0; i < c; i++)
         printf("x%d = %f \n", i + 1, roots[i]);
     printf("sum: %f ", roots[c]);
 }
 
 
 int main() {
-    struct Input input = get_input_from_file();             // зібрати вхідні данні з файлу
-
+    struct Input input = get_input_from_file();                 // зібрати вхідні данні з файлу
     print_input(&input);
 
-    float *roots = do_simplex(&input);     // знаходження оптимального рішення
-
+    float *roots = do_simplex(&input);                          // знаходження оптимального рішення
     if (roots == NULL) {
         printf("Система неверішувана");
         return 0;
     }
-
     printf("Оптимальне рішення: \n");
     print_output(roots, input.x_c);
 
-    roots = mvg(roots, &input);             // знаходження оптимального цілочисленного рішення
 
+    roots = mvg(roots, &input);                                 // знаходження оптимального цілочисленного рішення
     printf("\n\nЦілочисленне рішення: \n");
     print_output(roots, input.x_c);
 

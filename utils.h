@@ -1,16 +1,13 @@
 #pragma once
-
 #include <stdlib.h>
 
 struct Input {                                          // структура вхідних данних
     float **constrains;                                 // обмеження       [ x_c + 2 ;  c_c ]
     float *func;                                        // цільова функція [ x_c     ; 1    ]
-
     int x_c;                                            // кількість коефіцієнтів
     int c_c;                                            // кількість обмежень
     int h;
-
-    int type;                                           // +1 - максимізація,  -1 - мінімізація,
+    int type;                                           // +1 - максимізація,  -1 - мінімізація
 };
 
 
@@ -72,7 +69,7 @@ struct Input get_input_from_file() {                    // читання вхі
     fscanf(fptr, "%d", &input.c_c);                     // зчитування кількості обмежень
     input.h = input.x_c + input.c_c;
 
-    fscanf(fptr, "%d", &input.type);                     // зчитування типу цільової функції
+    fscanf(fptr, "%d", &input.type);                    // зчитування типу цільової функції
 
                                                         // виділення пам'яті для обмежень та функції
     float **constrains = malloc_2d_array(input.x_c + 2, input.h);
@@ -99,15 +96,12 @@ struct Input get_input_from_file() {                    // читання вхі
         constrains[i][input.x_c] = (float) ti;
     }
 
-
     for (int i = 0; i < input.x_c; i++) {               // додаткові обмеження
         int r = i + input.c_c;                          // що всі коефіцієнти > 0
         for (int j = 0; j < input.x_c + 2; j++)
             constrains[r][j] = 0;
-
         constrains[r][i] = 1;
         constrains[r][input.x_c + 1] = -1;
-
     }
 
     fclose(fptr);
