@@ -9,6 +9,7 @@ struct Simplex {                                        // структура д
     int w;                                              // кількість стовпців таблиці
     int h;                                              // кількість рядків таблиці
     int error;                                          // флаг помилки
+    int type;
 };
 
 
@@ -23,6 +24,7 @@ struct Simplex get_matrix(struct Input *input) {        // генерація т
     simplex.h = h;
     simplex.matrix = matrix;
     simplex.error = 0;
+    simplex.type = input->type;
                                                         // створення таблиці
     for (int i = 0; i < input->h; i++) {                // копіювання коефіцієнтів обмежень
         float k = input->constrains[i][input->x_c + 1];
@@ -180,7 +182,7 @@ void get_roots(struct Simplex *simplex, float *roots) {
             roots[i] = root;                    // індекс стовпця = індексу знайденного кореня
 
     }
-    roots[simplex->x_c] = simplex->matrix[simplex->h-1][simplex->w-1] * -1;
+    roots[simplex->x_c] = simplex->matrix[simplex->h-1][simplex->w-1] * simplex->type * -1;
 }
 
 

@@ -121,8 +121,3 @@ int is_int(float a) {                                   // перевірка ч
 }
 
 
-void print_roots(float *roots, int c) {
-    for (int i = 0; i < c; i++)                    // друкування відповіді
-        printf("x%d = %f \n", i + 1, roots[i]);
-    printf("sum: %f ", roots[c]);
-}
