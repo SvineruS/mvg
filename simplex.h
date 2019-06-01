@@ -12,13 +12,6 @@ struct Simplex {                                        // структура д
 };
 
 
-struct SimplexOutput {                                  // структура рішення симлексу
-    float *roots;                                       // оптимальні коефіцієнти
-    int c;                                              // кількість коефіцієнтів
-    float f;                                            // значення функції при цих коефіцієнтах
-};
-
-
 struct Simplex get_matrix(struct Input *input) {        // генерація таблиці для симплексу
     int h = input->h + 1;                               // кілкість рядків = кількість обмежень + 1
     int w = input->x_c + input->h + 1;                  // стовпці = коефіцієнти + обмеження + 1
@@ -32,17 +25,18 @@ struct Simplex get_matrix(struct Input *input) {        // генерація т
     simplex.error = 0;
                                                         // створення таблиці
     for (int i = 0; i < input->h; i++) {                // копіювання коефіцієнтів обмежень
+        float k = input->constrains[i][input->x_c + 1];
         for (int j = 0; j < input->x_c; j++)
-            matrix[i][j] = input->constrains[i][j];
-        matrix[i][w - 1] = input->constrains[i][input->x_c];
+            matrix[i][j] = input->constrains[i][j] * k;
+        matrix[i][w - 1] = input->constrains[i][input->x_c] * k;
     }
 
     for (int j = 0; j < w; j++)                         // копіювання цільової функції
-        matrix[h - 1][j] = j < input->x_c ? input->func[j] : 0;
+        matrix[h - 1][j] = j < input->x_c ? input->func[j] * input->type : 0;
 
     for (int i = 0; i < h; i++)                         // створення базисів
         for (int j = 0; j < input->h; j++)
-            matrix[i][input->x_c + j] = i == j ? input->constrains[i][input->x_c + 1] : 0;
+            matrix[i][input->x_c + j] = i == j ? 1 : 0;
 
     return simplex;
 }
@@ -81,28 +75,21 @@ void find_pivot(struct Simplex *simplex, int *col_, int *row_) {
         return;
     }
 
-    for (int i = 0; i < simplex->h - 1; i++)            // якшо є більше одного підходящого рядка - помилка
-        if (i != row &&
-            simplex->matrix[i][simplex->w - 1] / simplex->matrix[i][column] ==
-            simplex->matrix[row][simplex->w - 1] / simplex->matrix[row][column]
-                ) {
-            simplex->error = 1;
-            return;
-        }
+//    for (int i = 0; i < simplex->h - 1; i++)            // якшо є більше одного підходящого рядка - помилка
+//        if (i != row &&
+//            simplex->matrix[i][simplex->w - 1] / simplex->matrix[i][column] ==
+//            simplex->matrix[row][simplex->w - 1] / simplex->matrix[row][column]
+//                ) {
+//            simplex->error = 1;
+//            return;
+//        }
 
     *row_ = row;
     *col_ = column;
 }
 
 
-void improve(struct Simplex *simplex) {                 // покращення плану
-    int col;
-    int row;
-
-    find_pivot(simplex, &col, &row);                    // пошук стовпця та рядка
-    if (simplex->error == 1)
-        return;
-
+void improve(struct Simplex *simplex, int col, int row) {                 // покращення плану
     float pivot_value = simplex->matrix[row][col];      // індексне значення
 
     for (int j = 0; j < simplex->w; j++) {              // ділимо головний стовпець на індексне значення
@@ -125,6 +112,39 @@ int is_ideal(struct Simplex *simplex) {                 // перевірка н
             return 0;
     return 1;
 }
+
+void fix_matrix(struct Simplex *simplex) {
+    int col = -1;
+    int row = -1;
+
+    for (int i = 0; i < simplex->h - 1; i++) {          // пошук рядка
+        if (simplex->matrix[i][simplex->w - 1] >= 0)     // тількі від'ємні значення
+            continue;
+        if (row == -1 ||                                // пошук мінімального значення в останньому стовпці
+            simplex->matrix[i][simplex->w - 1] <
+            simplex->matrix[row][simplex->w - 1] )
+            row = i;
+    }
+    if (row == -1)
+        return;
+
+    for (int i = 0; i < simplex->w - 1; i++) {          // пошук стовпця
+        if (simplex->matrix[row][i] >= 0)     // тількі від'ємні значення
+            continue;
+        if (col == -1 ||                                // пошук мінімального значення в останньому стовпці
+            simplex->matrix[row][i] <
+            simplex->matrix[row][col] )
+            col = i;
+    }
+    if (col == -1) {
+        simplex->error = 1;
+        return;
+    }
+
+    improve(simplex, col, row);
+    fix_matrix(simplex);
+}
+
 
                                                         // отримання коренів зі стовпця (якщо є)
 float get_column_root(struct Simplex *simplex, int col) {
@@ -150,35 +170,43 @@ float get_column_root(struct Simplex *simplex, int col) {
 }
 
                                                         // пошук всіх коренів
-void get_roots(struct Simplex *simplex, struct SimplexOutput *s_output) {
-    int j = 0;
+void get_roots(struct Simplex *simplex, float *roots) {
     for (int i = 0; i < simplex->w - 1; i++) {          // перебираємо всі стовпці
         float root = get_column_root(simplex, i);
         if (simplex->error == 1) return;
         if (root == -1) continue;
-                                                        // якщо є корінь то записуємо його у відповідь
-        s_output->roots[j++] = root;                    // індекс стовпця = індексу знайденного кореня
+
+        if (i < simplex->x_c)
+            roots[i] = root;                    // індекс стовпця = індексу знайденного кореня
+
     }
-                                                        // значення функції = значенню останнього рядка та стовпця * -1
-    s_output->f = simplex->matrix[simplex->h - 1][simplex->w - 1] * -1;
+    roots[simplex->x_c] = simplex->matrix[simplex->h-1][simplex->w-1] * -1;
 }
 
 
-struct SimplexOutput do_simplex(struct Input *input) {  // головна функція
+float* do_simplex(struct Input *input) {  // головна функція
     struct Simplex simplex = get_matrix(input);         // отримання матриці
-    struct SimplexOutput s_output;                      // створення структури відповіді
 
-    s_output.c = input->x_c;
-    s_output.roots = malloc_1d_array(s_output.c);       // виділення пам'яті
-    for (int i = 0; i < s_output.c; i++)                // заповення коефіцієнтів нулями
-        s_output.roots[i] = 0;
-    s_output.f = 0;
+    float *roots = malloc_1d_array(input->x_c+1);       // виділення пам'яті
+    for (int i = 0; i < input->x_c; i++)                // заповення коефіцієнтів нулями
+        roots[i] = 0;
+
+    fix_matrix(&simplex);
+    if (simplex.error == 1)
+        return NULL;
+
+    int col, row;
 
     while (!is_ideal(&simplex)) {                       // поки план не оптимальний
-        improve(&simplex);                              // покращуємо його
+
+        find_pivot(&simplex, &col, &row);                    // пошук стовпця та рядка
+        if (simplex.error == 1)
+            return NULL;
+        improve(&simplex, col, row);                              // покращуємо його
         if (simplex.error == 1)                         // але якщо помилка - повертаемо відповідь з нулями
-            return s_output;
+            return NULL;
     }
-    get_roots(&simplex, &s_output);                     // заповнення коренів з матриці
-    return s_output;                                    // повертаємо відповідь
+
+    get_roots(&simplex, roots);                     // заповнення коренів з матриці
+    return roots;                                    // повертаємо відповідь
 }

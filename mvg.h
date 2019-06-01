@@ -5,15 +5,15 @@
 
 
 void get_mc(int i, float r, float **mc1, float **mc2) {         // отримання допоміжного обмеження
-    mc1[i][0] = (int) r;                                        // перше обмеження: x < [xk]
+    mc1[i][0] = ((int) r);                                        // перше обмеження: x < [xk]
     mc1[i][1] = 1;
 
-    mc2[i][0] = (int) r + 1;                                    // друге обмеження: x > [xk] + 1
+    mc2[i][0] = ((int) r + 1);                                    // друге обмеження: x > [xk] + 1
     mc2[i][1] = -1;
 }
 
                                                                 // обгортка для симплекс методу
-struct SimplexOutput simplex_wrap(struct Input *input, float **mc) {
+float* simplex_wrap(struct Input *input, float **mc) {
     for (int i = 0; i < input->x_c; i++) {                      // додає додаткові обмеження до початкових
         int r = i + input->c_c;                                 //   вхідних данних
         input->constrains[r][i] = 1;
@@ -25,6 +25,7 @@ struct SimplexOutput simplex_wrap(struct Input *input, float **mc) {
 
 
 float *mvg_(float *roots, float **mc, struct Input *input) {    // метод віток та границь (рекурсивний)
+
     for (int i = 0; i < input->x_c; i++) {
         float r = roots[i];
         if (is_int(r))                                          // серед усіх коефіцієнтів шукаємо не цілочисленний
@@ -34,14 +35,21 @@ float *mvg_(float *roots, float **mc, struct Input *input) {    // метод в
         float **mc2 = copy_2d_array(mc, 2, input->x_c);
         get_mc(i, r, mc1, mc2);                                 // генеруємо 2 нових
 
-        struct SimplexOutput so1 = simplex_wrap(input, mc1);    // шукаємо оптимальне рішення з новими обмеженнями
-        struct SimplexOutput so2 = simplex_wrap(input, mc2);
+        float* r1 = simplex_wrap(input, mc1);    // шукаємо оптимальне рішення з новими обмеженнями
+        float* r2 = simplex_wrap(input, mc2);
 
+        if (r1 == NULL && r2 == NULL) return NULL;
+        else if (r1 == NULL) return mvg_(r2, mc2, input);
+        else if (r2 == NULL) return mvg_(r1, mc1, input);
+        else {
+            float f1 = r1[input->x_c] * input->type;
+            float f2 = r2[input->x_c] * input->type;
 
-        if (so1.f > so2.f)                                      // для обмеженя з більшим значенням цільової функції
-            return mvg_(so1.roots, mc1, input);                 // рекурсивно викликаємо метод віток і границь
-        else
-            return mvg_(so2.roots, mc2, input);
+            if (f1 > f2)                                        // для обмеженя з більшим значенням цільової функції
+                return mvg_(r1, mc1, input);                 // рекурсивно викликаємо метод віток і границь
+            else
+                return mvg_(r2, mc2, input);
+        }
     }
     return roots;                                               // якщо всі коефіцієнті цілочисленні повертаємо їх
 }

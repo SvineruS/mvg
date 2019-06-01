@@ -9,6 +9,8 @@ struct Input {                                          // структура в
     int x_c;                                            // кількість коефіцієнтів
     int c_c;                                            // кількість обмежень
     int h;
+
+    int type;                                           // +1 - максимізація,  -1 - мінімізація,
 };
 
 
@@ -70,6 +72,8 @@ struct Input get_input_from_file() {                    // читання вхі
     fscanf(fptr, "%d", &input.c_c);                     // зчитування кількості обмежень
     input.h = input.x_c + input.c_c;
 
+    fscanf(fptr, "%d", &input.type);                     // зчитування типу цільової функції
+
                                                         // виділення пам'яті для обмежень та функції
     float **constrains = malloc_2d_array(input.x_c + 2, input.h);
     float *func = malloc_1d_array(input.x_c);
@@ -116,3 +120,9 @@ int is_int(float a) {                                   // перевірка ч
     return (b - a == 0) ? 1 : 0;
 }
 
+
+void print_roots(float *roots, int c) {
+    for (int i = 0; i < c; i++)                    // друкування відповіді
+        printf("x%d = %f \n", i + 1, roots[i]);
+    printf("sum: %f ", roots[c]);
+}

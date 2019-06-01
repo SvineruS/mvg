@@ -3,16 +3,25 @@
 #include "mvg.h"
 
 
+
 int main() {
     struct Input input = get_input_from_file();             // зібрати вхідні данні з файлу
-    struct SimplexOutput s_output = do_simplex(&input);     // знаходження оптимального рішення
-    float *roots = mvg(s_output.roots, &input);             // знаходження оптимального цілочисленного рішення
+    float *roots = do_simplex(&input);     // знаходження оптимального рішення
 
-    int sum = 0;
-    for (int i = 0; i < input.x_c; i++) {                   // друкування відповіді
-        printf("x%d = %d \n", i + 1, (int) roots[i]);
-        sum += (int) roots[i] * (int) input.func[i];
+    if (roots == NULL) {
+        printf("Система неверішувана");
+        return 0;
     }
-    printf("sum: %d ", sum);
+
+    printf("Оптимальне рішення: \n");
+    print_roots(roots, input.x_c);
+
+    roots = mvg(roots, &input);             // знаходження оптимального цілочисленного рішення
+
+    printf("\n\nЦілочисленне рішення: \n");
+    print_roots(roots, input.x_c);
+
     return 0;
 }
+
+
