@@ -44,6 +44,11 @@ int main() {
 
 
     roots = mvg(roots, &input);                                 // знаходження оптимального цілочисленного рішення
+    if (roots == NULL) {
+        printf("Система не має цілочисленного рішення");
+        return 0;
+    }
+
     printf("\n\nЦілочисленне рішення: \n");
     print_output(roots, input.x_c);
 
