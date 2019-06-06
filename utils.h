@@ -47,7 +47,7 @@ float *copy_1d_array(float *orig, int w) {              // дублювання 
 
 float **copy_2d_array(float **orig, int w, int h) {     // дублювання двувимірного массиву
     float **copy = malloc_2d_array(w, h);
-    for (int i = 0; i < w; i++)
+    for (int i = 0; i < h; i++)
         copy[i] = copy_1d_array(orig[i], w);
     return copy;
 }
